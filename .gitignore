@@ -1,0 +1,4 @@
+# ignore the glfw folder!
+glfw/*
+CMake*
+!CMakeLists.txt

@@ -39,7 +39,12 @@ private:
     void cleanup();
     void createInstance();
     void createLogicalDevice();
-    void createSurface();
+    
+#if VK_USE_PLATFORM_WIN32_KHR
+    void createSurfaceWin();
+#else
+    void createSurfaceXCB();
+#endif
 
     void pickPhysicalDevice();
     bool isDeviceSuitable(VkPhysicalDevice device) const;

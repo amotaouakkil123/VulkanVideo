@@ -188,7 +188,7 @@ void VulkanInstance::createLogicalDevice() {
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void VulkanInstance::createSurface() {
+void VulkanInstance::createSurfaceWin() {
     VkWin32SurfaceCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
     createInfo.hwnd = glfwGetWin32Window(window);
@@ -197,6 +197,10 @@ void VulkanInstance::createSurface() {
     if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create window surface!");
     }
+}
+
+void VulkanInstance::createSurfaceXCB() {
+
 }
 
 void VulkanInstance::pickPhysicalDevice() {

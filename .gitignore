@@ -2,3 +2,5 @@
 glfw/*
 CMake*
 !CMakeLists.txt
+build
+.cache

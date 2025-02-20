@@ -2,6 +2,7 @@
 #include "QueueFamily.h"
 #include <map>
 #include <set>
+#include <string.h>
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -47,7 +48,11 @@ void VulkanInstance::initWindow() {
 void VulkanInstance::initVulkan() {
     createInstance();
     setupDebugMessenger();
-    createSurface();
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    createSurfaceWin();
+#else
+    createSurfaceXCB();
+#endif
     pickPhysicalDevice();
     createLogicalDevice();
 }
@@ -188,6 +193,8 @@ void VulkanInstance::createLogicalDevice() {
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
 void VulkanInstance::createSurfaceWin() {
     VkWin32SurfaceCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -198,6 +205,7 @@ void VulkanInstance::createSurfaceWin() {
         throw std::runtime_error("Failed to create window surface!");
     }
 }
+#endif
 
 void VulkanInstance::createSurfaceXCB() {
 

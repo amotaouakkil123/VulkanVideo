@@ -26,7 +26,7 @@
     <ClInclude Include="include\VkInstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\QueueFamily.h">
+    <ClInclude Include="include\VkUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -139,7 +139,7 @@
     <ClCompile Include="src\VkInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\QueueFamily.h" />
+    <ClInclude Include="include\VkUtils.h" />
     <ClInclude Include="include\VkInstance.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

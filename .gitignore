@@ -4,3 +4,5 @@ CMake*
 !CMakeLists.txt
 build
 .cache
+.vs
+x64

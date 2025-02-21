@@ -1,6 +1,11 @@
 #ifndef VK_INSTANCE_H
 #define VK_INSTANCE_H
 
+#if defined(_WIN64) || defined(WIN32) || defined(__MINGW32__)
+#define VK_USE_PLATFORM_WIN32_KHR
+#define GLFW_EXPOSE_NATIVE_WIN32
+#endif
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -8,19 +13,30 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <cstdint>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+#include <optional>
+
+#include <vulkan/vulkan.h>
+
+#if !(defined(_WIN64) || defined(WIN32) || defined(__MINGW32__))
 #include <wayland-client-core.h>
 #include <vulkan/vulkan_wayland.h>
 #include <wayland-client.h>
 #include <xdg-shell.h>
+#endif
 
+#include "VkUtils.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
+};
+
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
 #ifdef NDEBUG
@@ -37,6 +53,7 @@ public:
 
 private:
 
+    // Initialization methods
     void initWindow();
     void initVulkan();
     void mainLoop();
@@ -44,15 +61,28 @@ private:
     void createInstance();
     void createLogicalDevice();
 
-#if VK_USE_PLATFORM_WIN32_KHR
+    // Surface methods
+#if defined(_WIN64) || defined(WIN32) || defined(__MINGW32__)
     void createSurfaceWin();
 #else
     void createSurfaceWayland();
 #endif
 
+    // Physical device methods
     void pickPhysicalDevice();
-    bool isDeviceSuitable(VkPhysicalDevice device) const;
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+    bool isDeviceSuitable(VkPhysicalDevice device);
 
+    void createSwapChain();
+    // Swapchain utils
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+
+    // Extensions and layers
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -80,6 +110,9 @@ private:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkSurfaceKHR surface;
+    VkSwapchainKHR swapChain;
+    VkFormat swapChainImageFormat;
+    VkExtent2D swapChainExtent;
 
 };
 

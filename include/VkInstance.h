@@ -60,6 +60,8 @@ private:
     void cleanup();
     void createInstance();
     void createLogicalDevice();
+    void createImageViews();
+    void createGraphicsPipeline();
 
     // Surface methods
 #if defined(_WIN64) || defined(WIN32) || defined(__MINGW32__)
@@ -113,6 +115,8 @@ private:
     VkSwapchainKHR swapChain;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+    std::vector<VkImage> swapChainImages;
+    std::vector<VkImageView> swapChainImageViews;
 
 };
 

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28.3)
 
 project(VulkanVideo)
 
-file(GLOB_RECURSE sources src/*.cpp include/*.h)
+file(GLOB_RECURSE sources src/*.cpp include/*.h glfw/src/*.h)
 
 # add the data to the target, so it becomes visible in some IDE
 

@@ -4,6 +4,15 @@
 #include <set>
 #include <string.h>
 
+//   **     Wayland     **
+static struct wl_display* display = nullptr;        // To connect to the display server
+static struct wl_registry* registry = nullptr;      // Provides access to the objects made available by the display server
+static struct wl_compositor* compositor = nullptr;  // The session compositor
+static struct wl_surface* surface = nullptr;        // Rectangular area which may be displayed, presents buffers, receives user input, and defines local coordinate system
+static struct xdg_wm_base* shell = nullptr;         // Handle to a xdg-shell to use the desktop environment
+static struct xdg_surface* shellSurface = nullptr;  // Surface that is part of the desktop environment
+static struct xdg_toplevel* toplevel = nullptr;     // Representation of a window "as an actual window instead of a popup"
+
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
@@ -208,6 +217,13 @@ void VulkanInstance::createSurfaceWin() {
 #endif
 
 void VulkanInstance::createSurfaceXCB() {
+   VkWaylandSurfaceCreateInfoKHR createInfo {
+      .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+      .pNext = nullptr,
+      .flags = 0,
+      .display = wl_display_connect(nullptr),
+      .surface = 0,
+   };
 
 }
 

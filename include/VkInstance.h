@@ -9,6 +9,12 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <vector>
+#include <vulkan/vulkan_core.h>
+#include <wayland-client-core.h>
+#include <vulkan/vulkan_wayland.h>
+#include <wayland-client.h>
+#include <xdg-shell.h>
+
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -61,8 +67,12 @@ private:
         VkDebugUtilsMessengerEXT debugMessenger,
         const VkAllocationCallbacks* pAllocator);
 
-    // **** Fields ****
+    // ****     Fields      ****
+
+    //   **      GLFW       **
     GLFWwindow* window;
+
+    //   **     Vulkan      **
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
     VkDevice device;

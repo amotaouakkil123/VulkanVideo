@@ -60,7 +60,7 @@ void VulkanInstance::initVulkan() {
 #ifdef VK_USE_PLATFORM_WIN32_KHR
     createSurfaceWin();
 #else
-    createSurfaceXCB();
+    createSurfaceWayland();
 #endif
     pickPhysicalDevice();
     createLogicalDevice();
@@ -216,7 +216,7 @@ void VulkanInstance::createSurfaceWin() {
 }
 #endif
 
-void VulkanInstance::createSurfaceXCB() {
+void VulkanInstance::createSurfaceWayland() {
    VkWaylandSurfaceCreateInfoKHR createInfo {
       .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
       .pNext = nullptr,

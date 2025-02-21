@@ -47,7 +47,7 @@ private:
 #if VK_USE_PLATFORM_WIN32_KHR
     void createSurfaceWin();
 #else
-    void createSurfaceXCB();
+    void createSurfaceWayland();
 #endif
 
     void pickPhysicalDevice();

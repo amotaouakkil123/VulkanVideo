@@ -83,6 +83,8 @@ private:
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
+    // Graphics Pipeline methods
+    VkShaderModule createShaderModule(const std::vector<char>& code);
 
     // Extensions and layers
     std::vector<const char*> getRequiredExtensions();

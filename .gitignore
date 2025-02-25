@@ -6,3 +6,4 @@ build
 .cache
 .vs
 x64
+*.spv

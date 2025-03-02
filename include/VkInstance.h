@@ -23,7 +23,7 @@
 #include <wayland-client-core.h>
 #include <vulkan/vulkan_wayland.h>
 #include <wayland-client.h>
-#include <xdg-shell.h>
+#include "xdg-shell-client-protocol.h"
 #endif
 
 #include "VkUtils.h"
@@ -61,6 +61,7 @@ private:
     void createInstance();
     void createLogicalDevice();
     void createImageViews();
+    void createRenderPass();
     void createGraphicsPipeline();
 
     // Surface methods
@@ -115,6 +116,9 @@ private:
     VkQueue presentQueue;
     VkSurfaceKHR surface;
     VkSwapchainKHR swapChain;
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
     std::vector<VkImage> swapChainImages;

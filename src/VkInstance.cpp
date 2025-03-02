@@ -19,6 +19,70 @@ static struct wl_surface* surface = nullptr;        // Rectangular area which ma
 static struct xdg_wm_base* shell = nullptr;         // Handle to a xdg-shell to use the desktop environment
 static struct xdg_surface* shellSurface = nullptr;  // Surface that is part of the desktop environment
 static struct xdg_toplevel* toplevel = nullptr;     // Representation of a window "as an actual window instead of a popup"
+
+static void handleToplevelConfigure(
+    void* data,
+    struct xdg_toplevel* toplevel,
+    int32_t width,
+    int32_t height,
+    struct wl_array* states
+)
+{
+
+}
+
+static void handleToplevelClose(void* data, struct xdg_toplevel* toplevel)
+{
+}
+
+static const struct xdg_toplevel_listener toplevelListener = {
+    .configure = handleToplevelConfigure,
+    .close = handleToplevelClose
+};
+
+
+static void handleShellSurfaceConfigure(void* data, struct xdg_surface* shellSurface, uint32_t serial)
+{
+    xdg_surface_ack_configure(shellSurface, serial);
+}
+
+static const struct xdg_surface_listener shellSurfaceListener = {
+    .configure = handleShellSurfaceConfigure
+};
+
+
+static void handleShellPing(void* data, struct xdg_wm_base* shell, uint32_t serial)
+{
+    xdg_wm_base_pong(shell, serial);
+}
+
+static const struct xdg_wm_base_listener shellListener = {
+    .ping = handleShellPing
+};
+
+static void handleRegistry(
+    void* data,
+	struct wl_registry* registry,
+	uint32_t name,
+    const char* interface,
+    uint32_t version
+)
+{
+    if (strcmp(interface, wl_compositor_interface.name) == 0)
+    {
+        compositor = (wl_compositor*)wl_registry_bind(registry, name, &wl_compositor_interface, 1);
+    }
+    else if (strcmp(interface, xdg_wm_base.name) == 0)
+    {
+        shell = (xdg_wm_base*)wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
+        xdg_wm_base_add_listener(shell, &shellListener, NULL);
+    }
+}
+
+static const struct wl_registry_listener registryListener = {
+    .global = handleRegistry
+};
+
 #endif
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -101,6 +165,9 @@ void VulkanInstance::mainLoop() {
 }
 
 void VulkanInstance::cleanup() {
+    vkDestroyPipeline(device, graphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+    vkDestroyRenderPass(device, renderPass, nullptr);
     for (auto imageView : swapChainImageViews) {
         vkDestroyImageView(device, imageView, nullptr);
     }
@@ -374,9 +441,70 @@ void VulkanInstance::createGraphicsPipeline() {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
 
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = nullptr;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &dynamicState;
+    pipelineInfo.layout = pipelineLayout;
+    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.subpass = 0;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
+
+    VkPipeline graphicsPipeline;
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create a graphics pipeline.");
+    }
+
+
     // End of method
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
+}
+
+void VulkanInstance::createRenderPass() {
+    VkAttachmentDescription colorAttachmnet{};
+    colorAttachmnet.format = swapChainImageFormat;
+    colorAttachmnet.samples = VK_SAMPLE_COUNT_1_BIT;
+
+    colorAttachmnet.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachmnet.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+    colorAttachmnet.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachmnet.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+    colorAttachmnet.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    colorAttachmnet.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference colorAttachmentRef{};
+    colorAttachmentRef.attachment = 0;
+    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkSubpassDescription subpass{};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &colorAttachmentRef;
+
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkRenderPassCreateInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    renderPassInfo.attachmentCount = 1;
+    renderPassInfo.pAttachments = &colorAttachmnet;
+    renderPassInfo.subpassCount = 1;
+    renderPassInfo.pSubpasses = &subpass;
+
+    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create render pass.");
+    }
 }
 
 VkShaderModule VulkanInstance::createShaderModule(const std::vector<char>& code) {
@@ -413,26 +541,27 @@ void VulkanInstance::createSurfaceWayland() {
    wl_registry_add_listener(registry, &registryListener, nullptr);
    wl_display_roundtrip(display);
 
-   surface = wl_compositor_create_surface(compositor);
-   shellSurface = xdg_wm_base_get_xdg_surface(shell, surface);
+   wl_surface* waylandSurface;
+   waylandSurface = wl_compositor_create_surface(compositor);
+   shellSurface = xdg_wm_base_get_xdg_surface(shell, waylandSurface);
    xdg_surface_add_listener(shellSurface, &shellSurfaceListener, nullptr);
 
    toplevel = xdg_surface_get_toplevel(shellSurface);
    xdg_toplevel_add_listener(toplevel, &toplevelListener, nullptr);
 
-   xdg_toplevel_set_title(toplevel, appName);
-   xdg_toplevel_set_app_id(toplevel, appName);
+   xdg_toplevel_set_title(toplevel, "appName");
+   xdg_toplevel_set_app_id(toplevel, "appName");
 
-   wl_surface_commit(surface);
+   wl_surface_commit(waylandSurface);
    wl_display_roundtrip(display);
-   wl_surface_commit(surface);
+   wl_surface_commit(waylandSurface);
 
    VkWaylandSurfaceCreateInfoKHR createInfo {
          .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
          .pNext = nullptr,
          .flags = 0,
          .display = display,
-         .surface = surface,
+         .surface = waylandSurface,
    };
 
    if (vkCreateWaylandSurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
@@ -627,7 +756,7 @@ VkPresentModeKHR VulkanInstance::chooseSwapPresentMode(const std::vector<VkPrese
 }
 
 VkExtent2D VulkanInstance::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
-   if (capabilities.currentExtent.width != (uint32_t)(std::numeric_limits<uint32_t>::max)) {
+   if (capabilities.currentExtent.width != (uint32_t)(std::numeric_limits<uint32_t>::max())) {
        return capabilities.currentExtent;
    }
    else {

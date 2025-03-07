@@ -10,6 +10,8 @@
 #include <fstream>
 #include <vulkan/vulkan_core.h>
 
+#define NOMINMAX 
+
 #if !(defined(_WIN64) || defined(WIN32) || defined(__MINGW32__))
 //   **     Wayland     **
 static struct wl_display* display = nullptr;        // To connect to the display server
@@ -155,6 +157,7 @@ void VulkanInstance::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
+    createRenderPass();
     createGraphicsPipeline();
 }
 
@@ -353,9 +356,7 @@ void VulkanInstance::createGraphicsPipeline() {
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.pVertexBindingDescriptions = nullptr;
     vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputInfo.pVertexAttributeDescriptions = nullptr;
 
     // Input Assembly
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -379,9 +380,7 @@ void VulkanInstance::createGraphicsPipeline() {
     VkPipelineViewportStateCreateInfo viewportState{};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
     viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
 
     // Rasterizer
     VkPipelineRasterizationStateCreateInfo rasterizer{};
@@ -459,7 +458,6 @@ void VulkanInstance::createGraphicsPipeline() {
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     pipelineInfo.basePipelineIndex = -1;
 
-    VkPipeline graphicsPipeline;
     if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create a graphics pipeline.");
     }
@@ -493,8 +491,6 @@ void VulkanInstance::createRenderPass() {
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
 
-    VkRenderPass renderPass;
-    VkPipelineLayout pipelineLayout;
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = 1;
@@ -756,7 +752,7 @@ VkPresentModeKHR VulkanInstance::chooseSwapPresentMode(const std::vector<VkPrese
 }
 
 VkExtent2D VulkanInstance::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
-   if (capabilities.currentExtent.width != (uint32_t)(std::numeric_limits<uint32_t>::max())) {
+   if (capabilities.currentExtent.width != (uint32_t)(std::numeric_limits<uint32_t>::max)) {
        return capabilities.currentExtent;
    }
    else {
